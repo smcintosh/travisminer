@@ -1,4 +1,4 @@
-# Travisminer
+# TravisMiner
 
 TODO: Write a gem description
 

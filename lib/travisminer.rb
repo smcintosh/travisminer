@@ -1,5 +1,3 @@
 require "travisminer/version"
-
-module Travisminer
-  # Your code goes here...
-end
+require "travisminer/json"
+require "travisminer/repo"

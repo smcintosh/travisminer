@@ -5,3 +5,5 @@ gemspec
 
 # Dependencies
 gem 'json'
+gem 'rake'
+gem 'rspec'

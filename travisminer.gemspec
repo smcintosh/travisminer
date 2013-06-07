@@ -5,7 +5,7 @@ require 'travisminer/version'
 
 Gem::Specification.new do |gem|
   gem.name          = "travisminer"
-  gem.version       = Travisminer::VERSION
+  gem.version       = TravisMiner::VERSION
   gem.authors       = ["Shane McIntosh"]
   gem.email         = ["shanemcintosh@acm.org"]
   gem.description   = %q{Data extraction and mining scripts for Travis CI data}
