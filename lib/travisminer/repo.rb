@@ -1,3 +1,5 @@
+require 'set'
+
 module TravisMiner
 
   class RepoExtractor < JSONExtractor
@@ -38,6 +40,62 @@ module TravisMiner
           end
         end
       end
+    end
+
+    def printRepoHeader
+      puts "@relation travis_repos"
+      puts
+      puts "@attribute id numeric"
+      puts "@attribute slug string"
+      puts "@attribute description string"
+      puts "@attribute last_build_id numeric"
+      puts "@attribute last_build_number numeric"
+      puts "@attribute last_build_status numeric"
+      puts "@attribute last_build_result numeric"
+      puts "@attribute last_build_duration numeric"
+      puts "@attribute last_build_language string"
+      puts "@attribute last_build_started_at string"
+      puts "@attribute last_build_finished_at string"
+      puts
+      puts "@data"
+    end
+
+    def printRepo(repo)
+      # Skip ID so that we can do a simple loop
+      keys = ["slug", "description", "last_build_id", "last_build_number",
+          "last_build_status", "last_build_result", "last_build_duration",
+          "last_build_language", "last_build_started_at",
+          "last_build_finished_at"]
+
+      # Print ID
+      print repo["id"]
+
+      # Print all other keys, sanitizing newlines
+      keys.each do |k|
+        print ",#{repo[k].to_s.gsub("\n", ":_:NEWLINE:_:").gsub(",", ":_:COMMA:_:")}"
+      end
+
+      puts
+    end
+
+    # Poll on the travis-ci services to collect a list of slugs
+    def getprojects(mins=1)
+      slugs = Set.new
+      tot_sleep = 0
+
+      printRepoHeader
+      
+      begin
+        # Print each of the new returned repositories
+        get.each do |repo|
+          printRepo(repo) if (slugs.add?(repo['slug']))
+        end
+
+        sleep 60
+        tot_sleep += 1
+
+      end while (tot_sleep < mins)
+
     end
   end
 
