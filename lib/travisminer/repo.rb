@@ -89,6 +89,9 @@ module TravisMiner
         # Print each of the new returned repositories
         get.each do |repo|
           printRepo(repo) if (slugs.add?(repo['slug']))
+
+          # Flush to prevent data loss if we crash
+          STDOUT.flush
         end
 
         sleep 60
