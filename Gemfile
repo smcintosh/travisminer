@@ -7,3 +7,5 @@ gemspec
 gem 'json'
 gem 'rake'
 gem 'rspec'
+gem 'github_api'
+gem 'system_timer'
