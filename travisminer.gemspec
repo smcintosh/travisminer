@@ -8,9 +8,9 @@ Gem::Specification.new do |gem|
   gem.version       = Travisminer::VERSION
   gem.authors       = ["Shane McIntosh"]
   gem.email         = ["shanemcintosh@acm.org"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.description   = %q{Data extraction and mining scripts for Travis CI data}
+  gem.summary       = %q{Extract Travis CI data through RESTful web services and put into data mining formats}
+  gem.homepage      = "https://github.com/smcintosh/travisminer"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
