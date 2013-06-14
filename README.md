@@ -1,6 +1,6 @@
 # TravisMiner
 
-TODO: Write a gem description
+This gem provides a set of objects for scraping Travis CI and Github for data about projects using Travis CI service.
 
 ## Installation
 
@@ -18,7 +18,13 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Just add
+
+```ruby
+require 'travisminer'
+```
+
+to gain access to the travisminer class library.
 
 ## Contributing
 
