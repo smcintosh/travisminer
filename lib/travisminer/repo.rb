@@ -94,8 +94,9 @@ module TravisMiner
           STDOUT.flush
         end
 
-        sleep 60
-        tot_sleep += 1
+        # Poll every 5 minutes
+        sleep 300
+        tot_sleep += 5
 
       end while (tot_sleep < mins)
 
