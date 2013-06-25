@@ -1,10 +1,11 @@
 module TravisMiner
 
-  class ChurnExtractor < JSONExtractor
+  class ChurnExtractor < GithubMiner
 
-    def initialize(slug, url)
-      super(url)
+    def initialize(user, repo, path=".travis.yml")
+      super
       @slug = slug
+      #url = "https://api.github.com/repos/%s/commits?path=.travis.yml" % slug
     end
 
     def getcommits
@@ -24,7 +25,7 @@ module TravisMiner
       puts
       puts "@data"
 
-      get.each do |commit|
+      @github.repos.commits.list(user, repo, path).each do |commit|
         printcommit(commit)
       end
     end
