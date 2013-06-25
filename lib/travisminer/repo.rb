@@ -3,7 +3,26 @@ require 'set'
 module TravisMiner
 
   class RepoExtractor < JSONExtractor
-    def extract
+    def initialize(url)
+      super(url)
+      @slugs = Set.new
+    end
+
+    def importslugs(fname)
+      isdata = false
+      File.foreach(fname) do |line|
+        line.strip!
+        if (!isdata)
+          isdata = true if (line =~ /^@data/)
+          next
+        end
+
+        slug = line.split(",")[1]
+        @slugs.add(slug)
+      end
+    end
+
+    def getbuilds(slug)
       puts "@relation travis_ci_data"
       puts
       puts "@attribute slug string"
@@ -22,23 +41,29 @@ module TravisMiner
       puts
       puts "@data"
 
-      json = get
-      json.each do |repo|
-        slug = repo['slug']
-        repo['last_build_number'].to_i.times do |i|
-          bid = i+1
-          build = JSONExtractor.new("https://api.travis-ci.org/repositories/%s/builds.json?number=%s" % [slug,bid]).get
-          if (build.size == 1)
-            next if (build[0]['state'] != "finished")
-            print "%s" % slug
-            build[0].keys.sort.each do |k|
-              print ",%s" % [build[0][k].to_s.gsub(/\n/, ":_:NEWLINE:_:")]
-            end
-            puts
-          else
-            raise "Incorrect cardinality %d of returned JSON object for build id %d" % [build.size, bid]
-          end
+      # First page
+      builds = JSONExtractor.new("https://api.travis-ci.org/repositories/%s/builds.json" % slug).get
+      raise abort "No builds could be retrieved for slug %s" % [slug] if (builds.nil? or builds.empty?)
+
+      printBuildPage(slug, builds)
+
+      # N additional pages
+      while (builds.last["number"].to_i > 1)
+        builds = JSONExtractor.new("https://api.travis-ci.org/repositories/%s/builds.json?after_number=%s" % [slug,builds.last["number"]]).get
+        raise abort "No builds could be retrieved for slug %s" % [slug] if (builds.nil? or builds.empty?)
+
+        printBuildPage(slug, builds)
+      end
+    end
+
+    def printBuildPage(slug, builds)
+      builds.each do |build|
+        next if (build['state'] != "finished")
+        print "%s" % slug
+        build.keys.sort.each do |k|
+          print ",%s" % [sanitize(build[k].to_s)] if (k != "slug")
         end
+        puts
       end
     end
 
@@ -72,34 +97,37 @@ module TravisMiner
 
       # Print all other keys, sanitizing newlines
       keys.each do |k|
-        print ",#{repo[k].to_s.gsub("\n", ":_:NEWLINE:_:").gsub(",", ":_:COMMA:_:")}"
+        print ",#{sanitize(repo[k])}"
       end
 
       puts
     end
 
-    # Poll on the travis-ci services to collect a list of slugs
-    def getprojects(mins=1)
-      slugs = Set.new
-      tot_sleep = 0
+    def sanitize(val)
+      return val.to_s.gsub("\n", ":_:NEWLINE:_:").gsub(",", ":_:COMMA:_:").gsub("'", ":_:QUOTE:_:").gsub("\"", ":_:DQUOTE:_:").gsub("@", ":_:AT:_:")
+    end
 
+    # Poll on the travis-ci services to collect a list of slugs
+    def getprojects()
       printRepoHeader
       
-      begin
+      loop do
         # Print each of the new returned repositories
-        get.each do |repo|
-          printRepo(repo) if (slugs.add?(repo['slug']))
+        begin
+          get.each do |repo|
+            printRepo(repo) if (@slugs.add?(repo['slug']))
 
-          # Flush to prevent data loss if we crash
-          STDOUT.flush
+            # Flush to prevent data loss if we crash
+            STDOUT.flush
+          end
+        rescue Exception => msg
+          STDERR.puts "WARNING: Poll failed at #{Time.now}"
+          STDERR.puts msg
         end
 
         # Poll every 5 minutes
         sleep 300
-        tot_sleep += 5
-
-      end while (tot_sleep < mins)
-
+      end
     end
   end
 
